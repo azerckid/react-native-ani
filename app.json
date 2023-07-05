@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "ani-interact",
+    "slug": "ani-interact",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  },
+  "name": "ani-interact"
+}
