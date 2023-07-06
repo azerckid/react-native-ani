@@ -1,11 +1,5 @@
-import React, { useRef, useState } from "react";
-import {
-  Animated,
-  Dimensions,
-  Easing,
-  Pressable,
-  TouchableOpacity,
-} from "react-native";
+import React, { useRef } from "react";
+import { Animated, PanResponder } from "react-native";
 import styled from "styled-components/native";
 
 const Container = styled.View`
@@ -20,83 +14,53 @@ const Box = styled.View`
 `;
 const AnimatedBox = Animated.createAnimatedComponent(Box);
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-
 export default function App() {
   const POSITION = useRef(
     new Animated.ValueXY({
-      x: -SCREEN_WIDTH / 2 + 100,
-      y: -SCREEN_HEIGHT / 2 + 100,
+      x: 0,
+      y: 0,
     })
   ).current;
-  const topLeft = Animated.timing(POSITION, {
-    toValue: {
-      x: -SCREEN_WIDTH / 2 + 100,
-      y: -SCREEN_HEIGHT / 2 + 100,
-    },
-    useNativeDriver: false,
-  });
-  const bottomLeft = Animated.timing(POSITION, {
-    toValue: {
-      x: -SCREEN_WIDTH / 2 + 100,
-      y: SCREEN_HEIGHT / 2 - 100,
-    },
-    useNativeDriver: false,
-  });
-  const bottomRight = Animated.timing(POSITION, {
-    toValue: {
-      x: SCREEN_WIDTH / 2 - 100,
-      y: SCREEN_HEIGHT / 2 - 100,
-    },
-    useNativeDriver: false,
-  });
-  const topRight = Animated.timing(POSITION, {
-    toValue: {
-      x: SCREEN_WIDTH / 2 - 100,
-      y: -SCREEN_HEIGHT / 2 + 100,
-    },
-    useNativeDriver: false,
-  });
-  const moveUp = () => {
-    Animated.loop(
-      Animated.sequence([bottomLeft, bottomRight, topRight, topLeft])
-    ).start();
-  };
-  const opacity = POSITION.y.interpolate({
-    inputRange: [-200, 0, 200],
-    outputRange: [1, 0.5, 1],
-  });
+
   const borderRadius = POSITION.y.interpolate({
     inputRange: [-300, 300],
     outputRange: [100, 0],
   });
-  const rotate = POSITION.y.interpolate({
-    inputRange: [-300, 300],
-    outputRange: ["-360deg", "360deg"],
-  });
   const bgColor = POSITION.y.interpolate({
     inputRange: [-300, 300],
-    outputRange: ["rgb(255, 99, 71)", "rgb(99, 71, 255)"],
+    outputRange: ["rgb(255, 99, 71)", "rgb(71, 166, 255)"],
   });
-
-  POSITION.addListener(() => {
-    console.log("Y VALUE:", POSITION);
-    console.log("opacity VALUE:", opacity);
-    console.log("borderRadius VALUE:", borderRadius);
-    console.log("rotate VALUE:", rotate);
-  });
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderMove: (_, { dx, dy }) => {
+        POSITION.setValue({
+          x: dx,
+          y: dy,
+        });
+      },
+      onPanResponderRelease: () => {
+        Animated.spring(POSITION, {
+          toValue: {
+            x: 0,
+            y: 0,
+          },
+          bounciness: 20,
+          useNativeDriver: false,
+        }).start();
+      },
+    })
+  ).current;
   return (
     <Container>
-      <Pressable onPress={moveUp}>
-        <AnimatedBox
-          style={{
-            borderRadius,
-            opacity,
-            backgroundColor: bgColor,
-            transform: [...POSITION.getTranslateTransform()],
-          }}
-        />
-      </Pressable>
+      <AnimatedBox
+        {...panResponder.panHandlers}
+        style={{
+          borderRadius,
+          backgroundColor: bgColor,
+          transform: POSITION.getTranslateTransform(),
+        }}
+      />
     </Container>
   );
 }
